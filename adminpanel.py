@@ -8,10 +8,10 @@ def list_files(startpath):
     for root, dirs, files in os.walk(startpath):
         level = root.replace(startpath, '').count(os.sep)
         indent = ' ' * 4 * (level)
-        strfd+=('{}{}/\n'.format(indent, os.path.basename(root)))
+        strfd+=('<a class="dir">{}{}/</a>\n'.format(indent, os.path.basename(root)))
         subindent = ' ' * 4 * (level + 1);
         for f in files:
-          strfd+=('{}{}\n'.format(subindent, f))
+          strfd+=('<a class="file">{}{}</a>\n'.format(subindent, f))
     return strfd
 
 
@@ -140,7 +140,7 @@ if (xhr.status != 200) {
 } else {
   var polsd = '';
   var data = ( xhr.responseText );
-	portdisp.innerText = data;
+	portdisp.innerHTML = data;
 	portdisp.innerHTML = '<div class="code">' + portdisp.innerHTML + '</div>';
 }
 	}
@@ -173,6 +173,15 @@ background: #D8E6F3;
 }
 .th:last-child {
 text-align: left;
+}
+.dir {
+    display: block;
+    color: green;
+}
+
+.file {
+    white-space: break-spaces;
+    color: orangered;
 }
 .logo {
     font-size: 28px;
