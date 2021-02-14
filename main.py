@@ -5,7 +5,6 @@ import aiohttp
 import os
 import pty
 import fcntl
-
 import json
 
 try:
@@ -268,9 +267,27 @@ terminal="""
     </style>
       <div id="terminal"></div>
       <script>
+			const docu = document.location.href;
+			var docs_mass = docu.split('/');
+			if( docu.includes(':')){
+				mao = docu.split(':');
+				if (mao[2]){
+				alls = ':'+mao[2];
+				}else{
+					alls = '';
+				}
+			}else{
+				alls = '';
+			}
         const term = new Terminal();
     //const socket = new WebSocket('/term');
-    const socket = new WebSocket('ws://localhost:"""+str(po)+"""/term')
+		if (docs_mass[0] == 'https:'){
+		var construct = 'wss://'+docs_mass[2]+alls+'/term';
+		}else{
+		var construct = 'ws://'+docs_mass[2]+alls+'/term';
+		}
+		console.log(construct);
+    const socket = new WebSocket(construct);
         term.open(document.getElementById('terminal'));
         term.onData(function(data){
         console.log(data)
