@@ -7,6 +7,49 @@ import pty
 import fcntl
 import json
 
+class ServerData():
+  def __init__(self):
+    self.data = ''
+  
+  def get_all_storage(self):
+    #os.system('free -m>sto.txt')
+    #data = open('sto.txt','r').read()
+    data = os.popen("free -m").read()
+    mass = data.split('\n')
+    memmory_mass = mass[1].replace('Mem:','').split('  ')
+    swap_mass = mass[2].replace('Swap:','').split('  ')
+    memmory_mass_ready = []
+    swap_mass_ready = []
+    for dated in memmory_mass:
+      if (dated != ''):
+        memmory_mass_ready.append(dated.replace(' ',''))
+    for dated in swap_mass:
+      if (dated != ''):
+        swap_mass_ready.append(dated.replace(' ',''))
+    self.mem_total = memmory_mass_ready[0]
+    self.mem_used = memmory_mass_ready[1]
+    self.mem_free = memmory_mass_ready[2]
+    self.mem_shared = memmory_mass_ready[3]
+    self.mem_buffer = memmory_mass_ready[4]
+    self.mem_avail = memmory_mass_ready[5]
+    self.swap_one = swap_mass_ready[0]
+    self.swap_two = swap_mass_ready[1]
+    self.swap_three = swap_mass_ready[2]
+
+
+
+server = ServerData()
+server.get_all_storage()
+total = server.mem_total
+used = server.mem_used
+free = server.mem_free
+shared = server.mem_shared
+buffer = server.mem_buffer
+avail = server.mem_avail
+sw_total = server.swap_one
+sw_used = server.swap_two
+sw_free = server.swap_three
+
 try:
   po = int(open('port.txt','r').read())
 except:
@@ -117,6 +160,60 @@ AdminPanel
 	function kolom(text){
     return ('<td>'+text+'</td>');
 	}
+	function memory_display(){
+		let portdisp = document.getElementsByClassName('about_it_panel')[0];
+		portdisp.innerHTML = `<div id="message">
+      <h2>Memory</h2>
+      <h1>Dashboard</h1>
+      <div>
+      <p>Memory (Hard):</p>
+      <div>Total memory: <a id="total">%total%</a> MB</div>
+      <div>Used memory: <a id="used">%used%</a> MB</div>
+      <div>Free memory: <a id="free">%free%</a> MB</div>
+      <div>Shared memory: <a id="shared">%shared%</a> MB</div>
+      <div>Buffered memory: <a id="buffered">%buffered%</a> MB</div>
+      <div>Avaliable memory: <a id="avail">%avail%</a> MB</div>
+      </div>
+      <div>
+      <p>Memory (Swap):</p>
+      <div>Swap total: <a id="sw1">%sw_total%</a> MB</div>
+      <div>Swap free: <a id="sw2">%sw_free%</a> MB</div>
+      <div>Swap used: <a id="sw3">%sw_used%</a> MB</div>
+      </div>
+    </div>`;
+		var file = '/getmemory';
+      let total = document.getElementById('total');
+      let used = document.getElementById('used');
+      let free = document.getElementById('free');
+      let shared = document.getElementById('shared');
+      let buffer = document.getElementById('buffered');
+      let avail = document.getElementById('avail');
+      let swap_to = document.getElementById('sw1');
+      let swap_fr = document.getElementById('sw2');
+      let swap_us = document.getElementById('sw3');
+      var xhr = new XMLHttpRequest();
+      xhr.open('GET', '/getmemory', false);
+      //{"total":"26069","used":"15418","free":"463","shared":"24","buffered":"10187","avail":"16971","sw_total":"0","sw_free":"0","sw_used":"0"}
+      xhr.send();
+      // 4. Если код ответа сервера не 200, то это ошибка
+      if (xhr.status != 200) {
+        // обработать ошибку
+        alert( xhr.status + ': ' + xhr.statusText ); // пример вывода: 404: Not Found
+      } else {
+        // вывести результат
+        var responsib = ( xhr.responseText ); // responseText -- текст ответа.
+        var pills = JSON.parse(responsib);
+        total.innerHTML = pills.total;
+        used.innerHTML = pills.used;
+        free.innerHTML = pills.free;
+        shared.innerHTML = pills.shared;
+        buffer.innerHTML = pills.buffered;
+        avail.innerHTML = pills.avail;
+        swap_to.innerHTML = pills.sw_total;
+        swap_fr.innerHTML = pills.sw_free;
+        swap_us.innerHTML = pills.sw_used;
+      }
+	}
 	function port_display(){
 		let portdisp = document.getElementsByClassName('about_it_panel')[0];
 		var xhr = new XMLHttpRequest();
@@ -169,6 +266,15 @@ styles = """
     width: 100%;
     height: 63%;
 }
+#message { background: white; max-width: 360px; margin: 100px auto 16px; padding: 32px 24px; border-radius: 3px; }
+      #message h2 { color: #ffa100; font-weight: bold; font-size: 16px; margin: 0 0 8px; }
+      #message h1 { font-size: 22px; font-weight: 300; color: rgba(0,0,0,0.6); margin: 0 0 16px;}
+      #message p { line-height: 140%; margin: 16px 0 24px; font-size: 14px; }
+      .btn { display: block; text-align: center; background: #039be5; text-transform: uppercase; text-decoration: none; color: white; padding: 16px; border-radius: 4px; }
+      #message, .btn { box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24); }
+      #load { color: rgba(0,0,0,0.4); text-align: center; font-size: 13px; }
+      @media (max-width: 600px) {
+        #message { margin-top: 0; background: white; box-shadow: none; }
 table {
 width:100%;
 margin-top:20px;
@@ -568,8 +674,13 @@ async def xtermjs(request):
 async def xtermcss(request):
 	return web.Response(text=xterm_css,content_type='text/css')
 
+async def get_memory(request):
+	server.get_all_storage();total = server.mem_total;used = server.mem_used;free = server.mem_free;shared = server.mem_shared;buffer = server.mem_buffer;avail = server.mem_avail;sw_total = server.swap_one;sw_used = server.swap_two;sw_free = server.swap_three;js = '{"total":"'+total+'","used":"'+used+'","free":"'+free+'","shared":"'+shared+'","buffered":"'+buffer+'","avail":"'+avail+'","sw_total":"'+sw_total+'","sw_free":"'+sw_free+'","sw_used":"'+sw_used+'"}'
+	return web.Response(text=js,content_type='application/json')
+
 app = web.Application()
 routes = []
+routes.append(web.get('/getmemory', get_memory))
 routes.append(web.get('/term', websocket_handler))
 routes.append(web.get('/xterm/lib/xterm.js', xtermjs_js))
 routes.append(web.get('/xterm', xtermjs))
