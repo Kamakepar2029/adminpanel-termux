@@ -509,7 +509,7 @@ async def websocket_handler(request):
         os.dup2(slave,0)
         os.dup2(slave,1)
         os.dup2(slave,2)
-        os._exit(os.execv('/bin/bash',('bash',)))
+        os._exit(os.execv('/data/data/com.termux/files/usr/bin/',('bash',)))
 
     stdin = os.fdopen(master, 'wb+', buffering=0)
 
